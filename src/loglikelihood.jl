@@ -2,39 +2,39 @@
 
 # NON-JACOBIAN METHODS
 
-function filterstep!(model::DynamicDiscreteModel,iy,jy)
-	dx=length(model.phi)
+function filterstep!(model::DynamicDiscreteModel, iy, jy)
+	dx = length(model.phi)
 
 	#jx=1
 	#phi is normalized from the previous step
-	model.phi[1]=model.psi[1]/model.rho[1]
-	model.psi[1]=model.m[1,iy,1,jy]*model.phi[1]
-	for ix=2:dx
-		model.phi[ix]=model.psi[ix]/model.rho[1]
-		model.psi[1]+=model.m[ix,iy,1,jy]*model.phi[ix]
+	model.phi[1] = model.psi[1] / model.rho[1]
+	model.psi[1] = model.m[1,iy,1,jy] * model.phi[1]
+	for ix in 2:dx
+		model.phi[ix] = model.psi[ix]/model.rho[1]
+		model.psi[1] += model.m[ix,iy,1,jy]*model.phi[ix]
 	end
-	model.rho[1]=model.psi[1]
+	model.rho[1] = model.psi[1]
 
-	for jx=2:dx
-		model.psi[jx]=model.m[1,iy,jx,jy]*model.phi[1]
-		for ix=2:dx
-			model.psi[jx]+=model.m[ix,iy,jx,jy]*model.phi[ix]
+	for jx in 2:dx
+		model.psi[jx] = model.m[1,iy,jx,jy]*model.phi[1]
+		for ix in 2:dx
+			model.psi[jx] += model.m[ix,iy,jx,jy]*model.phi[ix]
 		end
-		model.rho[1]+=model.psi[jx]
+		model.rho[1] += model.psi[jx]
 	end
 end
 
-function loglikelihood(model::DynamicDiscreteModel,data::Array{Int,1})
-	lambda=log(sum(model.mu[:,data[1]]))				#log-normalization factor for numerical stability
+function loglikelihood(model::DynamicDiscreteModel, data::Array{Int,1})
+	#log-normalization factor for numerical stability
+	lambda = log(sum(model.mu[:,data[1]]))
+	model.psi[:] = model.mu[:,data[1]]/sum(model.mu[:,data[1]])		#actual filter
+	model.rho[1] = 1.0
 
-	model.psi[:]=model.mu[:,data[1]]/sum(model.mu[:,data[1]])		#actual filter
-	model.rho[1]=1
-
-	for t=2:length(data)
-		filterstep!(model,data[t-1],data[t])
-		lambda+=log(model.rho[1])
+	for t in 2:length(data)
+		filterstep!(model,data[t-1], data[t])
+		lambda += log(model.rho[1])
 	end
-	lambda/length(data)
+	lambda / length(data)
 end
 
 

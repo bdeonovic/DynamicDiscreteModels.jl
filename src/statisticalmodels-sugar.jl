@@ -37,7 +37,7 @@ end
 #simulate iid individuals with heterogeneous number of periods of observation
 function rand(model::StatisticalModel,T::Array{Int,1})
 	n=length(T) 
-	data=Array(Array,n)
+  data=Array{Array}(n)
 	for i=1:n
 		data[i]=rand(model,T[i])
 	end
